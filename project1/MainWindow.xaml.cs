@@ -29,59 +29,7 @@ namespace project1
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     
-    public class ImgClass
-    {
-        private string location;
-        private Bitmap Name;
-        private Bitmap Attribute;
-        private Bitmap Function;
 
-        override public string ToString()
-        {
-            //生成名称
-            string name;
-            var image = MainWindow.ImgToBase64String(this.Name1);
-            var options = new Dictionary<string, object>{
-                {"language_type", "CHN_ENG"},
-                //{"detect_direction", "true"},
-                //{"detect_language", "true"},
-                {"probability", "true"}
-                };
-            // 带参数调用通用文字识别, 图片参数为本地图片
-            try
-            {
-                var result = MainWindow.client.GeneralBasic(image, options);
-                Console.WriteLine(result);
-                JObject o = JObject.Parse(result.ToString());
-                //name = o[];
-            }
-            catch (Exception exp)
-            {
-                _ = MessageBox.Show(exp.Message);
-            }
-            
-            return this.location;
-        }
-
-        public ImgClass(Bitmap name, Bitmap attribute, Bitmap function, string location)
-        {
-            this.Name = name;
-            this.Attribute = attribute;
-            this.Function = function;
-            this.Location = location;
-        }
-
-        public string Location { get => location; set => location = value; }
-        public Bitmap Name1 { get => Name; set => Name = value; }
-        public Bitmap Attribute1 { get => Attribute; set => Attribute = value; }
-        public Bitmap Function1 { get => Function; set => Function = value; }
-
-        public bool ToXML()
-        {
-
-            return true;
-        }
-    }
 
     public partial class MainWindow : Window
     {
@@ -287,11 +235,9 @@ namespace project1
 
         private void Classbox_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
-            //MessageBox.Show(classbox.SelectedItem.ToString());
-            int i = Convert.ToInt32(classbox.SelectedItem.ToString());
-            img1.Source = BitmapToBitmapImage(classlist[i].Name1);
-            img2.Source = BitmapToBitmapImage(classlist[i].Attribute1);
-            img3.Source = BitmapToBitmapImage(classlist[i].Function1);
+            img1.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Name1);
+            img2.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Attribute1);
+            img3.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Function1);
         }
     }
 }
