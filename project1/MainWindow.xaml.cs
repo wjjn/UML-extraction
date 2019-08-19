@@ -238,6 +238,7 @@ namespace project1
             img1.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Name1);
             img2.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Attribute1);
             img3.Source = BitmapToBitmapImage(classlist[classbox.SelectedIndex].Function1);
+            classlist[classbox.SelectedIndex].Totext();
         }
     }
 }

@@ -61,8 +61,6 @@ public class ImgClass
         try
         {
             result = MainWindow.client.GeneralBasic(image, options).ToString();
-            //Console.WriteLine(result);
-            //Console.WriteLine(r.words_result[0].words);
             result = MainWindow.client.GeneralBasic(image, options).ToString();
             r = JsonConvert.DeserializeObject<Result>(result);
             name = r.words_result[0].words;
@@ -88,9 +86,53 @@ public class ImgClass
     public Bitmap Attribute1 { get => Attribute; set => Attribute = value; }
     public Bitmap Function1 { get => Function; set => Function = value; }
 
-    public bool ToXML()
+    public bool Totext()
     {
+        //生成名称
+        //string text;
+        Result rA;
+        Result rF;
+        //属性识别
 
+        var image1 = MainWindow.ImgToBase64String(this.Attribute1);
+        var image2 = MainWindow.ImgToBase64String(this.Function1);
+        var options = new Dictionary<string, object>{
+                {"language_type", "CHN_ENG"},
+                //{"detect_direction", "true"},
+                //{"detect_language", "true"},
+                {"probability", "false"}
+                };
+        string Attributeresult;
+        string Functionresult;
+        // 带参数调用通用文字识别, 图片参数为本地图片
+        try
+        {
+            //名称
+            Console.WriteLine("------------------------------");
+            Console.WriteLine(this.ToString());
+            //识别属性
+            Attributeresult = MainWindow.client.AccurateBasic(image1, options).ToString();
+            rA = JsonConvert.DeserializeObject<Result>(Attributeresult);
+            Console.WriteLine("属性共有"+ rA.words_result_num.ToString()+"个");
+            foreach (var item in rA.words_result)
+            {
+                Console.WriteLine(item.words.ToString());
+            }
+
+            //识别方法
+            Functionresult = MainWindow.client.AccurateBasic(image2, options).ToString();
+            rF = JsonConvert.DeserializeObject<Result>(Attributeresult);
+            Console.WriteLine("方法共有" + rF.words_result_num.ToString() + "个");
+            foreach (var item in rF.words_result)
+            {
+                Console.WriteLine(item.words.ToString());
+            }
+            return true;
+        }
+        catch (Exception exp)
+        {
+            _ = MessageBox.Show(exp.Message);
+        }
         return true;
     }
 }
