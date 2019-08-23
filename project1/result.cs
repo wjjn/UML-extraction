@@ -121,7 +121,7 @@ public class ImgClass
 
             //识别方法
             Functionresult = MainWindow.client.AccurateBasic(image2, options).ToString();
-            rF = JsonConvert.DeserializeObject<Result>(Attributeresult);
+            rF = JsonConvert.DeserializeObject<Result>(Functionresult);
             Console.WriteLine("方法共有" + rF.words_result_num.ToString() + "个");
             foreach (var item in rF.words_result)
             {

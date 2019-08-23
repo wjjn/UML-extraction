@@ -19,8 +19,8 @@ using AForge.Imaging;
 using AForge.Math.Geometry;
 using System.Drawing.Imaging;
 using System.Collections.ObjectModel;
+using System.Xml;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace project1
 {
@@ -57,6 +57,16 @@ namespace project1
                 return null;
             }
         }
+        public static string StrFilte(string Str)
+        {
+            Str = Str.Replace("‘", "");
+            Str = Str.Replace("\"", "");
+            Str = Str.Replace("&", "");
+            Str = Str.Replace("<", "");
+            Str = Str.Replace(">", "");
+            Str = Str.Replace("◆", "");
+            return Str;
+        }
         private BitmapImage BitmapToBitmapImage(Bitmap bitmap)
         {
             Bitmap bitmapSource = new Bitmap(bitmap.Width, bitmap.Height);
@@ -74,7 +84,7 @@ namespace project1
             bitmapImage.BeginInit();
             bitmapImage.StreamSource = new MemoryStream(ms.ToArray());
             bitmapImage.EndInit();
-
+            bitmapSource.Dispose();
             return bitmapImage;
         }
 
@@ -120,6 +130,7 @@ namespace project1
             result = client.AccurateBasic(image, options);
             Console.WriteLine(result);
         }
+
         public MainWindow()
         {
             try
@@ -201,36 +212,74 @@ namespace project1
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-
-
-            // Set the PictureBox to display the image.
-            SourceImage.Source = BitmapToBitmapImage(source);
-
-            // Display the pixel format in Label1.
-            this.Title = "Pixel format: " + source.PixelFormat.ToString();
-
-            //文字识别
-
-            // 参数
-            int i = Convert.ToInt32(classbox.SelectedItem.ToString());
-            var image = ImgToBase64String(classlist[i].Name1);
-
-            var options = new Dictionary<string, object>{
+            //生成XMI文档
+            XmlDocument doc = new XmlDocument();
+            XmlDeclaration newDec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
+            doc.AppendChild(newDec);
+            XmlElement XMI = doc.CreateElement("xmi","XMI", "http://schema.omg.org/spec/XMI/2.1");
+            doc.AppendChild(XMI);
+            XMI.SetAttribute("version", "http://schema.omg.org/spec/XMI/2.1", "2.1");
+            XMI.SetAttribute("xmlns:uml", "http://schema.omg.org/spec/UML/2.0");
+            XMI.SetAttribute("xmlns:xmi", "http://schema.omg.org/spec/XMI/2.1");
+            XmlElement model = doc.CreateElement("uml","Model", "http://schema.omg.org/spec/UML/2.0");
+            model.SetAttribute("type", "http://schema.omg.org/spec/XMI/2.1", "uml:Model");
+            model.SetAttribute("name", "RootModel");
+            XMI.AppendChild(model);
+            foreach (ImgClass i in classlist)
+            {
+                XmlElement newClass = doc.CreateElement("packagedElement");
+                newClass.SetAttribute("name",i.ToString());
+                newClass.SetAttribute("type", "http://schema.omg.org/spec/XMI/2.1", "uml:Class");
+                model.AppendChild(newClass);
+                //生成属性和方法元素
+                Result rA;
+                Result rF;
+                var image1 = ImgToBase64String(i.Attribute1);
+                var image2 = ImgToBase64String(i.Function1);
+                var options = new Dictionary<string, object>{
                 {"language_type", "CHN_ENG"},
                 //{"detect_direction", "true"},
                 //{"detect_language", "true"},
-                {"probability", "true"}
+                {"probability", "false"}
                 };
-            // 带参数调用通用文字识别, 图片参数为本地图片
-            try
-            {
-                var result = client.GeneralBasic(image, options);
-                Console.WriteLine(result);
+                string Attributeresult;
+                string Functionresult;
+                try
+                {
+                    //识别属性
+                    Attributeresult = client.AccurateBasic(image1, options).ToString();
+                    rA = JsonConvert.DeserializeObject<Result>(Attributeresult);
+                    if (rA.words_result != null)
+                    {
+                        foreach (var item in rA.words_result)
+                        {
+                            XmlElement newAttribute = doc.CreateElement("ownedAttribute");
+                            newAttribute.SetAttribute("name", StrFilte(item.words.ToString()));
+                            newAttribute.SetAttribute("type", "http://schema.omg.org/spec/XMI/2.1", "uml:Property");
+                            newClass.AppendChild(newAttribute);
+                        }
+                    }
+                    //识别方法
+                    Functionresult = client.AccurateBasic(image2, options).ToString();
+                    rF = JsonConvert.DeserializeObject<Result>(Functionresult);
+                    if (rF.words_result!=null)
+                    {
+                        foreach (var item in rF.words_result)
+                        {
+                            XmlElement newFunction = doc.CreateElement("ownedOperation");
+                            newFunction.SetAttribute("name", StrFilte(item.words.ToString()));
+                            newFunction.SetAttribute("type", "http://schema.omg.org/spec/XMI/2.1", "uml:Operation");
+                            newClass.AppendChild(newFunction);
+                        }
+                    }
+                }
+                catch (Exception exp)
+                {
+                    _ = MessageBox.Show(exp.Message);
+                }
+
             }
-            catch (Exception exp)
-            {
-                _ = MessageBox.Show(exp.Message);
-            }
+            doc.Save("classes.xmi");
         }
 
         private void Classbox_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
